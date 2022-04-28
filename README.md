@@ -3,7 +3,7 @@
 ```
 Apoorva Kaushik
 April 20, 2022
-CS 4613 Project 1
+CS 4613 Project 2
 ```
 ---
 ## Running the solver
@@ -24,11 +24,11 @@ CS 4613 Project 1
     ```
     Output#.txt
     ```
-**Note:** The input file should be named Input`#`.txt where `#` is the number of the input file. This will lead to a correlated output file named Output`#`.txt.
+**Note:** The input file should be named Input`#`.txt where `#` is the number of the input file. This will produce a correlated output file named Output`#`.txt.
 
 ## Outputs
 ---
-Output1.txt 
+Output1.txt
 ```
 1 3 2 5 6 9 7 8 4
 6 8 5 2 7 4 1 9 3

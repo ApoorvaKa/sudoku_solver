@@ -10,6 +10,11 @@ DOMAIN = [str(i) for i in range(1, 10)]
 
 def string_board(sudoku_board):
     """
+    parameters:
+        sudoku_board (list): A nested list of a sudoku problem
+    returns:
+        str: A string representation of the sudoku board
+
     Prints the sudoku board in required format
     """
     return '\n'.join([' '.join(entry) for entry in sudoku_board])
@@ -17,14 +22,13 @@ def string_board(sudoku_board):
 
 def is_complete(state: list) -> bool:
     """
-    Checks if the sudoku board is filled in. 
-    Does NOT check legality since is_consistent is called for each cell at assignment
-
     Parameters:
         state (list): A nested list of a sudoku problem
-
     Returns:
         bool: True if the board is complete, False otherwise
+
+    Checks if the sudoku board is filled in. 
+    Does NOT check legality since is_consistent is called for each cell at assignment
     """
     for row in state:
         if '0' in row:
@@ -33,14 +37,13 @@ def is_complete(state: list) -> bool:
 
 def degree_heuristic(state: list, variables: list) -> tuple:
     """
-    Selects the variable with the most unassigned neighbors in row, col, and box
-
     Parameters:
         sudoku_board (list): A nested list of a sudoku problem
         variables (list): A list of variables
-
     Returns:
         tuple: A tuple of the row and column of the empty cell
+
+    Selects the variable with the most unassigned neighbors in row, col, and box
     """
     max_degree = -1
     max_var = None
@@ -65,12 +68,12 @@ def degree_heuristic(state: list, variables: list) -> tuple:
 
 def minimum_remaining_value(board: list) -> list:
     """
-    Finds all of the empty cells in a sudoku board with fewest legal values possible
-
     Parameters:
         board (list): A nested list of a sudoku problem
     Returns:
         list: A tuple of the row and column of the empty cell
+
+    Finds the empty cells in a sudoku board with fewest legal values possible
     """
     min_count = 10
     variables = []
@@ -90,21 +93,20 @@ def minimum_remaining_value(board: list) -> list:
 
 def select_unassigned_variable(state: list) -> tuple:
     """
-    First runs the minimum remaining value heuristic and then degree heuristic to break ties
     Parameters:
         state (list): A nested list of a sudoku problem
     Returns:
         tuple: A tuple of the row and column of the empty cell
+
+    First runs the minimum remaining value heuristic and then degree heuristic to break ties
     """
     minimum_variables = minimum_remaining_value(state)
     variable = degree_heuristic(state, minimum_variables)
-    print(minimum_variables, variable)
+    # print(minimum_variables, variable)
     return variable
 
 def is_consistent(state: list, row: int, col: int, num: int) -> bool:
     """
-    Checks if the given number is consistent with the potential row, column, and box
-
     Parameters:
         state (list): A nested list of a sudoku problem
         row (int): The row index
@@ -112,6 +114,8 @@ def is_consistent(state: list, row: int, col: int, num: int) -> bool:
         num (int): The number to be checked
     Returns:
         bool: True if the number is consistent, False otherwise
+
+    Checks if the given number is consistent with the potential row, column, and box
     """
     for i in range(9):
         if state[row][i] == num:
@@ -128,7 +132,13 @@ def is_consistent(state: list, row: int, col: int, num: int) -> bool:
 
 def backtrack(csp: list, state: list) -> list:
     """
-    Backtracking algorithm to solve sudoku
+    parameters:
+        csp (list): A nested list of original sudoku problem
+        state (list): A nested list of the sudoku's current state
+    returns:
+        list: A nested list of the solved sudoku problem
+
+    Backtracking algorithm to solve sudoku and return the solved state
     """
     if is_complete(state):
         return state
@@ -146,12 +156,12 @@ def backtrack(csp: list, state: list) -> list:
 
 def read_from_file(filename: str) -> list:
     """
-    File to state extractor 
-
     Parameters:
         filename (str): A file name as a string
     Returns:
         list[list]: A nested list of a sudoku problem
+
+    Reads the input file and returns a nested list of the sudoku problem
     """
     res = []
     with open(filename) as file_pointer:
@@ -161,25 +171,22 @@ def read_from_file(filename: str) -> list:
 
 def main():
     ## ArgParse + Regex for input file read and output file write
+    
     parser = argparse.ArgumentParser(description='Sudoku Solver')
     parser.add_argument('in_file', nargs='?', help='Input file', default=None)
     cmd = parser.parse_args()
     filename = input("Enter the file name: ") if (not cmd.in_file) else cmd.in_file
+    
     temp = re.findall(r'\d+', filename)
     res = list(map(int, temp))
-    print(res)
     output_filename = "Output" + str(res[0]) + ".txt"
     
     ## Read from file and solve the sudoku
     csp = read_from_file(filename)
-    string_board(csp)
     state = copy.deepcopy(csp)
     final = backtrack(csp, state)
-    print("-----------------")
-    # print(final)
     with open(output_filename, "w") as out_file:
         out_file.write(string_board(final))
-
 
 if __name__ == "__main__":
     main()
