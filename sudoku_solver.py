@@ -103,7 +103,7 @@ def select_unassigned_variable(state: list) -> tuple:
 
 def is_consistent(state: list, row: int, col: int, num: int) -> bool:
     """
-    Checks if the given number is consistent with the given row and column
+    Checks if the given number is consistent with the potential row, column, and box
 
     Parameters:
         state (list): A nested list of a sudoku problem
