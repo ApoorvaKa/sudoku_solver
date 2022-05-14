@@ -170,7 +170,7 @@ def read_from_file(filename: str) -> list:
     return res
 
 def main():
-    ## ArgParse + Regex for input file read and output file write
+    # ArgParse + Regex for input file read and output file write
     
     parser = argparse.ArgumentParser(description='Sudoku Solver')
     parser.add_argument('in_file', nargs='?', help='Input file', default=None)
@@ -181,7 +181,7 @@ def main():
     res = list(map(int, temp))
     output_filename = "Output" + str(res[0]) + ".txt"
     
-    ## Read from file and solve the sudoku
+    # Read from file and solve the sudoku
     csp = read_from_file(filename)
     state = copy.deepcopy(csp)
     final = backtrack(csp, state)

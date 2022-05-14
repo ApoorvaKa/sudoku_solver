@@ -26,6 +26,22 @@ CS 4613 Project 2
     ```
 **Note:** The input file should be named Input`#`.txt where `#` is the number of the input file. This will produce a correlated output file named Output`#`.txt.
 
+## Constraint Satisfaction Formulation
+---
+I set up the sudoku with the following constraints satisfaction problem definition.
+
+**Variables:** There are 81 variables, one for each cell in the sudoku. The variables are stored in a 2D array and refered to as `board[i][j]` where i is the row and j is the column of the cell.
+
+**Domains:** Each variable in the sudoku board has a domain 1-9.
+
+**Constraints:** Each variable is part of 3 constraints.
+
+    1. Alldiff(row)
+    2. Alldiff(column)
+    3. Alldiff(box)
+
+
+
 ## Outputs
 ---
 Output1.txt
@@ -70,3 +86,6 @@ Output3.txt
 
 ## Source Code
 ---
+```python
+
+```
