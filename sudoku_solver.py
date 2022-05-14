@@ -29,6 +29,7 @@ def is_complete(state: list) -> bool:
 
     Checks if the sudoku board is filled in. 
     Does NOT check legality since is_consistent is called for each cell at assignment
+    which will guarantee it is a legal board.
     """
     for row in state:
         if '0' in row:
