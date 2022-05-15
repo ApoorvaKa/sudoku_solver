@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
-# Sudoku Solver
-# Apoorva Kaushik
+"""
+Apoorva Kaushik
+April 20, 2022
+CS 4613 Project 2
+Sudoku Solver
+"""
 
 import argparse
 import re
@@ -27,9 +31,8 @@ def is_complete(state: list) -> bool:
     Returns:
         bool: True if the board is complete, False otherwise
 
-    Checks if the sudoku board is filled in. 
-    Does NOT check legality since is_consistent is called for each cell at assignment
-    which will guarantee it is a legal board.
+    Checks if the sudoku board is completely filled in. 
+    Does NOT check legality since is_consistent is called for each cell
     """
     for row in state:
         if '0' in row:
@@ -64,26 +67,25 @@ def degree_heuristic(state: list, variables: list) -> tuple:
         if degree > max_degree:
             max_degree = degree
             max_var = var
-    return max_var
-    
+    return max_var  
 
-def minimum_remaining_value(board: list) -> list:
+def minimum_remaining_value(state: list) -> list:
     """
     Parameters:
-        board (list): A nested list of a sudoku problem
+        state (list): A nested list of a sudoku problem
     Returns:
-        list: A tuple of the row and column of the empty cell
+        list: A tuple of the row and column of the empty cell(s) with fewest legal values
 
-    Finds the empty cells in a sudoku board with fewest legal values possible
+    Finds the empty cell(s) in a sudoku board with fewest legal values possible
     """
     min_count = 10
     variables = []
     for i in range(9):
         for j in range(9):
-            if board[i][j] == '0':
+            if state[i][j] == '0':
                 count = 0
                 for value in DOMAIN:
-                    if is_consistent(board, i, j, value):
+                    if is_consistent(state, i, j, value):
                         count += 1
                 if count < min_count:
                     min_count = count
@@ -103,7 +105,6 @@ def select_unassigned_variable(state: list) -> tuple:
     """
     minimum_variables = minimum_remaining_value(state)
     variable = degree_heuristic(state, minimum_variables)
-    # print(minimum_variables, variable)
     return variable
 
 def is_consistent(state: list, row: int, col: int, num: int) -> bool:
@@ -144,12 +145,9 @@ def backtrack(csp: list, state: list) -> list:
     if is_complete(state):
         return state
     var = select_unassigned_variable(state)
-    #for value in order_domain_values(state, var):
     for value in DOMAIN:
         if is_consistent(state, var[0], var[1], value):
             state[var[0]][var[1]] = value
-            print("----------------")
-            print(string_board(state))
             if backtrack(csp, state):
                 return state
             state[var[0]][var[1]] = '0'
@@ -164,25 +162,28 @@ def read_from_file(filename: str) -> list:
 
     Reads the input file and returns a nested list of the sudoku problem
     """
-    res = []
+    board = []
     with open(filename) as file_pointer:
         for _ in range(9):
-            res.append((file_pointer.readline().strip()).split())
-    return res
+            board.append((file_pointer.readline().strip()).split())
+    return board
 
 def main():
-    # ArgParse + Regex for input file read and output file write
-    
+    """
+    This is the driver code for the sudoku solver. It will choose the file and execute the solver on it.
+    """
+
     parser = argparse.ArgumentParser(description='Sudoku Solver')
     parser.add_argument('in_file', nargs='?', help='Input file', default=None)
     cmd = parser.parse_args()
-    filename = input("Enter the file name: ") if (not cmd.in_file) else cmd.in_file
+    filename = input("Enter File Name: ") if (not cmd.in_file) else cmd.in_file
     
+    # regex to name the output file based on the input
     temp = re.findall(r'\d+', filename)
     res = list(map(int, temp))
     output_filename = "Output" + str(res[0]) + ".txt"
     
-    # Read from file and solve the sudoku
+    # read from file and solve the sudoku before writing it to the output
     csp = read_from_file(filename)
     state = copy.deepcopy(csp)
     final = backtrack(csp, state)
