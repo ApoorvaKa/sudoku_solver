@@ -30,11 +30,11 @@ CS 4613 Project 2
 
 ## Constraint Satisfaction Formulation
 ---
-I set up the sudoku with the following constraints satisfaction problem definition.
+I set up sudoku with the following constraint satisfaction problem definition.
 
 **Variables:** There are 81 variables, one for each cell in the sudoku. The variables are stored in a 2D array and refered to as `board[i][j]` where i is the row and j is the column of the cell.
 
-**Domains:** Each variable in the sudoku board has a domain 1-9.
+**Domains:** Each variable in the sudoku board has a domain `1-9`.
 
 **Constraints:** The following constraints are used to define the sudoku problem.
 
