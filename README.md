@@ -6,6 +6,16 @@ April 20, 2022
 CS 4613 Project 2
 ```
 ---
+## Front-end visualizer
+A browser-based Sudoku visualizer is included in this project for interactive solving.
+
+1. Open `index.html` directly in a browser, or serve the folder locally:
+   ```bash
+   python3 -m http.server 8000
+   ```
+2. Visit `http://localhost:8000` in your browser.
+3. Enter a puzzle, press `Solve`, or step through the backtracking logic one move at a time.
+
 ## Running the solver
 1. Download `sudoku_solver.py`
 2. Place the `sudoku_solver.py` file in the same directory as formatted input files that will be solved.
