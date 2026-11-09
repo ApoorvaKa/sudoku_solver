@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sudoku Visualizer</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="panel board-panel">
+        <div class="toolbar">
+          <div>
+            <h1>Sudoku Visualizer</h1>
+            <p class="subtitle">Interactive backtracking solver</p>
+          </div>
+          <div class="actions-stack">
+            <div class="actions actions-top">
+              <button id="sample-btn" class="secondary">Load sample</button>
+              <button id="clear-btn" class="secondary">Clear</button>
+            </div>
+            <div class="actions actions-bottom">
+              <button id="solve-btn" class="primary">Solve</button>
+              <button id="step-btn" class="secondary">Step</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="board-wrapper">
+          <div id="sudoku-board" class="sudoku-board" aria-label="Sudoku board"></div>
+        </div>
+
+        <footer class="footer-note footer-board">
+          <p>
+            Developed by
+            <a href="https://github.com/ApoorvaKa" target="_blank" rel="noopener noreferrer">Apoorva Kaushik</a>
+          </p>
+          <p>Originally developed for an Artificial Intelligence course.</p>
+        </footer>
+      </section>
+
+      <aside class="panel info-panel">
+        <h2>Solver status</h2>
+        <div id="status" class="status-box">Ready to solve.</div>
+
+        <div class="trace-box">
+          <h3>DFS trace</h3>
+          <ul id="dfs-trace" class="dfs-trace"></ul>
+        </div>
+
+        <div class="legend">
+          <div><span class="legend-swatch clue"></span> Clue</div>
+          <div><span class="legend-swatch highlight"></span> Selected / current</div>
+          <div><span class="legend-swatch filled"></span> Typed value</div>
+        </div>
+
+        <div class="helper-card">
+          <h3>How to use</h3>
+          <ul>
+            <li>Type digits 1-9 into any empty cells.</li>
+            <li>Use the sample puzzle or start from a blank board.</li>
+            <li>Tap Solve to animate the backtracking search.</li>
+            <li>Tap Step to move one move at a time.</li>
+          </ul>
+        </div>
+
+        <div class="helper-card algorithm-card">
+          <h3>Backtracking algorithm</h3>
+          <p>
+            The solver uses depth-first search with constraint checking. At each empty cell,
+            it picks a candidate value from 1–9, checks whether it violates Sudoku rules in the
+            row, column, or 3x3 box, and only then places it. If that branch leads to a dead end,
+            it backtracks and tries the next valid option. This continues until the board is full or
+            no valid move remains.
+          </p>
+        </div>
+
+      </aside>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
