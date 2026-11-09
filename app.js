@@ -13,8 +13,24 @@ const SAMPLE_BOARD = [
   ['0', '0', '0', '0', '8', '0', '0', '7', '9'],
 ];
 
+const SAMPLE_BOARDS = [
+  SAMPLE_BOARD,
+  [
+    ['0', '0', '0', '5', '6', '0', '7', '0', '4'],
+    ['6', '8', '0', '0', '7', '0', '0', '9', '0'],
+    ['4', '9', '0', '0', '0', '1', '2', '0', '0'],
+    ['8', '5', '0', '4', '0', '0', '0', '1', '0'],
+    ['0', '0', '1', '6', '0', '5', '9', '0', '0'],
+    ['0', '2', '0', '0', '0', '3', '0', '5', '8'],
+    ['0', '0', '9', '3', '0', '0', '0', '7', '1'],
+    ['0', '1', '0', '0', '2', '0', '0', '3', '6'],
+    ['7', '0', '3', '0', '4', '8', '0', '0', '0'],
+  ],
+];
+
 const boardElement = document.getElementById('sudoku-board');
 const statusBox = document.getElementById('status');
+const traceList = document.getElementById('dfs-trace');
 const sampleBtn = document.getElementById('sample-btn');
 const clearBtn = document.getElementById('clear-btn');
 const solveBtn = document.getElementById('solve-btn');
@@ -26,6 +42,7 @@ let solutionSteps = [];
 let stepIndex = 0;
 let autoTimer = null;
 let selectedCell = null;
+let activePath = [];
 
 function cloneBoard(board) {
   return board.map((row) => [...row]);
@@ -70,12 +87,21 @@ function createBoardCell(row, col, value) {
   return input;
 }
 
-function renderBoard(board = boardState) {
+function renderBoard(board = boardState, stateMap = {}) {
   boardElement.innerHTML = '';
   for (let row = 0; row < 9; row += 1) {
     for (let col = 0; col < 9; col += 1) {
       const value = board[row][col];
       const cell = createBoardCell(row, col, value);
+      const key = `${row}-${col}`;
+
+      if (activePath.some((entry) => entry.row === row && entry.col === col)) {
+        cell.classList.add('path');
+      }
+
+      if (stateMap[key]) {
+        cell.classList.add(stateMap[key]);
+      }
 
       if (selectedCell && selectedCell.row === row && selectedCell.col === col) {
         cell.classList.add('highlight');
@@ -92,6 +118,73 @@ function renderBoard(board = boardState) {
 
 function setStatus(message) {
   statusBox.textContent = message;
+}
+
+function renderTrace(entries) {
+  traceList.innerHTML = '';
+  entries.slice(-10).forEach((entry) => {
+    const item = document.createElement('li');
+    item.textContent = entry.message;
+    item.classList.add(entry.state || 'guess');
+    traceList.appendChild(item);
+  });
+}
+
+function formatTracePath(pathEntries) {
+  if (!pathEntries.length) {
+    return 'Start';
+  }
+
+  return pathEntries.map(({ row, col, value }) => `R${row + 1}C${col + 1}=${value}`).join(' -> ');
+}
+
+function refreshTraceDisplay() {
+  const visibleTrace = solutionSteps
+    .slice(0, Math.max(0, stepIndex))
+    .map((step) => ({
+      message: step.trace,
+      state: step.state || 'guess',
+    }))
+    .filter((entry) => entry.message);
+  renderTrace(visibleTrace);
+}
+
+function boardHasConflicts(board) {
+  for (let row = 0; row < 9; row += 1) {
+    const seen = {};
+    for (let col = 0; col < 9; col += 1) {
+      const value = board[row][col];
+      if (value === EMPTY) continue;
+      if (seen[value]) return true;
+      seen[value] = true;
+    }
+  }
+
+  for (let col = 0; col < 9; col += 1) {
+    const seen = {};
+    for (let row = 0; row < 9; row += 1) {
+      const value = board[row][col];
+      if (value === EMPTY) continue;
+      if (seen[value]) return true;
+      seen[value] = true;
+    }
+  }
+
+  for (let boxRow = 0; boxRow < 9; boxRow += 3) {
+    for (let boxCol = 0; boxCol < 9; boxCol += 3) {
+      const seen = {};
+      for (let row = boxRow; row < boxRow + 3; row += 1) {
+        for (let col = boxCol; col < boxCol + 3; col += 1) {
+          const value = board[row][col];
+          if (value === EMPTY) continue;
+          if (seen[value]) return true;
+          seen[value] = true;
+        }
+      }
+    }
+  }
+
+  return false;
 }
 
 function isComplete(state) {
@@ -180,9 +273,35 @@ function selectUnassignedVariable(state) {
 function generateSolutionSteps(startingBoard) {
   const board = cloneBoard(startingBoard);
   const steps = [];
+  const pathEntries = [];
+
+  function buildStateMap(entries, overrideState) {
+    const stateMap = {};
+    entries.forEach(({ row, col }) => {
+      stateMap[`${row}-${col}`] = overrideState;
+    });
+    return stateMap;
+  }
 
   function search(currentBoard) {
     if (isComplete(currentBoard)) {
+      const solvedStateMap = {};
+      currentBoard.forEach((rowData, row) => {
+        rowData.forEach((value, col) => {
+          if (value !== EMPTY) {
+            solvedStateMap[`${row}-${col}`] = 'solved';
+          }
+        });
+      });
+      steps.push({
+        board: cloneBoard(currentBoard),
+        selectedCell: null,
+        path: pathEntries.map((entry) => ({ row: entry.row, col: entry.col })),
+        cellStates: solvedStateMap,
+        trace: 'Solved: board complete',
+        state: 'solved',
+        message: 'Solved! The board is complete.',
+      });
       return true;
     }
 
@@ -197,10 +316,16 @@ function generateSolutionSteps(startingBoard) {
       if (!isConsistent(currentBoard, row, col, value)) continue;
 
       currentBoard[row][col] = value;
+      pathEntries.push({ row, col, value });
+      const guessStateMap = buildStateMap(pathEntries, 'guess');
       selectedCell = { row, col };
       steps.push({
         board: cloneBoard(currentBoard),
         selectedCell: { row, col },
+        path: pathEntries.map((entry) => ({ row: entry.row, col: entry.col })),
+        cellStates: guessStateMap,
+        trace: `DFS path: ${formatTracePath(pathEntries)}`,
+        state: 'guess',
         message: `Trying ${value} in row ${row + 1}, column ${col + 1}.`,
       });
 
@@ -208,11 +333,28 @@ function generateSolutionSteps(startingBoard) {
         return true;
       }
 
+      const invalidMap = buildStateMap(pathEntries, 'invalid');
+      steps.push({
+        board: cloneBoard(currentBoard),
+        selectedCell: { row, col },
+        path: pathEntries.map((entry) => ({ row: entry.row, col: entry.col })),
+        cellStates: invalidMap,
+        trace: `Invalid branch: ${formatTracePath(pathEntries)}`,
+        state: 'invalid',
+        message: `Value ${value} failed for row ${row + 1}, column ${col + 1}.`,
+      });
+
+      pathEntries.pop();
       currentBoard[row][col] = EMPTY;
+      const backtrackMap = buildStateMap(pathEntries, 'backtrack');
       selectedCell = { row, col };
       steps.push({
         board: cloneBoard(currentBoard),
         selectedCell: { row, col },
+        path: pathEntries.map((entry) => ({ row: entry.row, col: entry.col })),
+        cellStates: backtrackMap,
+        trace: `Backtrack: ${formatTracePath(pathEntries)}`,
+        state: 'backtrack',
         message: `Backtracking from row ${row + 1}, column ${col + 1}.`,
       });
     }
@@ -239,38 +381,58 @@ function startAnimation() {
       clearInterval(autoTimer);
       autoTimer = null;
       selectedCell = null;
-      renderBoard(boardState);
-      setStatus('Solved! The board is complete.');
+      renderBoard(boardState, {});
+      refreshTraceDisplay();
+      const lastStep = solutionSteps[solutionSteps.length - 1];
+      if (lastStep && lastStep.state === 'invalid') {
+        setStatus('No valid solution exists for this board.');
+      } else {
+        setStatus('Solved! The board is complete.');
+      }
       return;
     }
 
     const step = solutionSteps[stepIndex];
     boardState = cloneBoard(step.board);
     selectedCell = step.selectedCell || selectedCell;
-    renderBoard(boardState);
+    activePath = step.path || [];
+    renderBoard(boardState, step.cellStates || {});
     setStatus(step.message);
     stepIndex += 1;
+    refreshTraceDisplay();
   }, 120);
 }
 
 function solveBoard() {
   const currentBoard = cloneBoard(boardState);
+
+  if (boardHasConflicts(currentBoard)) {
+    setStatus('This board has conflicting clues. Fix the duplicates before solving.');
+    return;
+  }
+
   const result = generateSolutionSteps(currentBoard);
 
-  if (!result.solved) {
+  if (!result.steps.length) {
     setStatus('No valid solution exists for this board.');
     return;
   }
 
   solutionSteps = result.steps;
   stepIndex = 0;
+  refreshTraceDisplay();
   startAnimation();
 }
 
 function stepBoard() {
   if (!solutionSteps.length) {
+    if (boardHasConflicts(boardState)) {
+      setStatus('This board has conflicting clues. Fix the duplicates before solving.');
+      return;
+    }
+
     const result = generateSolutionSteps(cloneBoard(boardState));
-    if (!result.solved) {
+    if (!result.steps.length) {
       setStatus('No valid solution exists for this board.');
       return;
     }
@@ -279,16 +441,20 @@ function stepBoard() {
   }
 
   if (stepIndex >= solutionSteps.length) {
-    setStatus('Solved! The board is complete.');
+    const lastStep = solutionSteps[solutionSteps.length - 1];
+    setStatus(lastStep && lastStep.state === 'invalid' ? 'No valid solution exists for this board.' : 'Solved! The board is complete.');
+    refreshTraceDisplay();
     return;
   }
 
   const step = solutionSteps[stepIndex];
   boardState = cloneBoard(step.board);
   selectedCell = step.selectedCell || selectedCell;
-  renderBoard(boardState);
+  activePath = step.path || [];
+  renderBoard(boardState, step.cellStates || {});
   setStatus(step.message);
   stepIndex += 1;
+  refreshTraceDisplay();
 }
 
 function loadSamplePuzzle() {
@@ -297,13 +463,16 @@ function loadSamplePuzzle() {
     autoTimer = null;
   }
 
-  boardState = cloneBoard(SAMPLE_BOARD);
-  initialPuzzle = cloneBoard(SAMPLE_BOARD);
+  const board = SAMPLE_BOARDS[Math.floor(Math.random() * SAMPLE_BOARDS.length)];
+  boardState = cloneBoard(board);
+  initialPuzzle = cloneBoard(board);
   solutionSteps = [];
   stepIndex = 0;
   selectedCell = null;
-  renderBoard(boardState);
-  setStatus('Sample puzzle loaded.');
+  activePath = [];
+  renderBoard(boardState, {});
+  renderTrace([]);
+  setStatus('Random sample puzzle loaded.');
 }
 
 function clearBoard() {
@@ -317,7 +486,9 @@ function clearBoard() {
   solutionSteps = [];
   stepIndex = 0;
   selectedCell = null;
-  renderBoard(boardState);
+  activePath = [];
+  renderBoard(boardState, {});
+  renderTrace([]);
   setStatus('Board cleared. Start entering your puzzle.');
 }
 
@@ -326,5 +497,6 @@ clearBtn.addEventListener('click', clearBoard);
 solveBtn.addEventListener('click', solveBoard);
 stepBtn.addEventListener('click', stepBoard);
 
-renderBoard(boardState);
+renderBoard(boardState, {});
+renderTrace([]);
 setStatus('Ready to solve.');
